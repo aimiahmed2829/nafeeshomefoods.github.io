@@ -1,4 +1,183 @@
-<!-- Inside your Seller Dashboard HTML file -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nafis Foods | Seller Dashboard</title>
+    <link class="icon" type="image/jpeg" href="logo.jpg">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --gold: #D4AF37;
+            --dark: #2c2c2c;
+            --light-bg: #f8f9fa;
+            --border-color: #e9ecef;
+        }
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--light-bg);
+            color: var(--dark);
+        }
+        header {
+            background-color: var(--dark);
+            color: var(--gold);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        header h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            letter-spacing: 1px;
+        }
+        .notification-status-bar {
+            background-color: #fff3cd;
+            color: #856404;
+            text-align: center;
+            padding: 10px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            border-bottom: 1px solid #ffeeba;
+            display: none;
+        }
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        .orders-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .order-card {
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border-top: 6px solid var(--gold);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: transform 0.2s;
+        }
+        .order-card:hover {
+            transform: translateY(-2px);
+        }
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        .order-id {
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: #333;
+        }
+        .order-time {
+            font-size: 0.85rem;
+            color: #666;
+        }
+        .customer-info {
+            font-size: 0.95rem;
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+        .items-list {
+            background: var(--light-bg);
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+        .item-row {
+            margin: 5px 0;
+        }
+        .proof-preview-thumbnail {
+            max-width: 100%;
+            max-height: 150px;
+            object-fit: contain;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            cursor: pointer;
+        }
+        .total-row {
+            font-size: 1.15rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .status-select {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            background-color: white;
+            font-size: 0.95rem;
+            outline: none;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .status-pending { border-top-color: #ffc107; }
+        .status-preparing { border-top-color: #17a2b8; }
+        .status-ready { border-top-color: #28a745; }
+        .status-completed { border-top-color: #6c757d; opacity: 0.7; }
+        .status-cancelled { border-top-color: #dc3545; opacity: 0.6; }
+
+        /* Lightbox styling for payment screenshot enlargement */
+        #img-lightbox {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 5000;
+            justify-content: center;
+            align-items: center;
+        }
+        #img-lightbox img {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 8px;
+            border: 3px solid white;
+        }
+
+        @media (max-width: 600px) {
+            .orders-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="notification-status-bar" id="notif-warning">
+    <i class="fas fa-exclamation-triangle"></i> Notifications are blocked or not supported. Please enable them in your browser settings to receive audio/visual alerts for new orders!
+</div>
+
+<header>
+    <h1><i class="fas fa-utensils"></i> NAFIS FOODS — Seller Admin Dashboard</h1>
+    <div id="connection-indicator"><i class="fas fa-circle" style="color: #28a745;"></i> Live Live Monitoring Enabled</div>
+</header>
+
+<div class="dashboard-container">
+    <h2>Active Orders</h2>
+    <div class="orders-grid" id="orders-display-container">
+        <p style="color: #666; font-style: italic;">Awaiting incoming stream connection from database...</p>
+    </div>
+</div>
+
+<div id="img-lightbox" onclick="this.style.display='none'"><img id="lightbox-target" src=""></div>
+
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
@@ -19,38 +198,152 @@
 
     let initialLoadComplete = false;
 
-    // Immediately trigger browser request for permission for you (the seller)
+    // Trigger browser permissions to ask you to turn on push notifications immediately
     async function initSellerNotifications() {
-        if (Notification.permission === 'default') {
-            await Notification.requestPermission();
-        }
-        if (Notification.permission === 'granted') {
-            const reg = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-            await getToken(messaging, { 
-                vapidKey: "BFx1PxB2B1nHzQ5Zpz8bBaIQj5qMs3HXZ_dIgnyDHqbQC-biOOfjhMSTru-DtPB8ENUDZornXJjyXASSL3HL4ok", // <-- PASTE SAME VAPID KEY HERE TOO
-                serviceWorkerRegistration: reg 
-            });
+        try {
+            if (Notification.permission === 'default') {
+                const permission = await Notification.requestPermission();
+                if (permission !== 'granted') {
+                    document.getElementById('notif-warning').style.display = 'block';
+                }
+            }
+            
+            if (Notification.permission === 'granted') {
+                const reg = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+                await getToken(messaging, { 
+                    vapidKey: "BFx1PxB2B1nHzQ5Zpz8bBaIQj5qMs3HXZ_dIgnyDHqbQC-biOOfjhMSTru-DtPB8ENUDZornXJjyXASSL3HL4ok", 
+                    serviceWorkerRegistration: reg 
+                });
+            } else {
+                document.getElementById('notif-warning').style.display = 'block';
+            }
+        } catch (err) {
+            console.log("Notification enrollment fallback executed:", err);
         }
     }
     window.addEventListener('load', initSellerNotifications);
 
-    // Watch incoming orders list
+    // Watch incoming orders from Firebase realtime stream
     onValue(ref(db, 'orders'), (snapshot) => {
+        const container = document.getElementById('orders-display-container');
+        container.innerHTML = "";
         const data = snapshot.val();
-        if (!data) return;
 
-        // If a new order arrives after loading the page, trigger a system notification banner
+        if (!data) {
+            container.innerHTML = `<p style="color: #666; font-style: italic; grid-column: 1/-1; text-align: center; margin-top: 40px;">No customer orders found in the system database log.</p>`;
+            initialLoadComplete = true;
+            return;
+        }
+
+        // Handle native system push alert banner if new row dropped in post-initialization
         if (initialLoadComplete) {
             const latestOrder = Object.values(data).pop();
             if (Notification.permission === 'granted') {
                 new Notification("🚨 New Nafis Foods Order!", {
-                    body: `Order from ${latestOrder.name} (${latestOrder.phone}) total item count: ${Object.keys(latestOrder.items || {}).length}`,
+                    body: `Order from ${latestOrder.name || 'Customer'} (${latestOrder.phone || 'No Phone'}) for a total of $${calculateTotal(latestOrder.items)}`,
                     icon: 'logo.jpg'
                 });
+                
+                // Play subtle ding sound if supported
+                try {
+                    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = audioCtx.createOscillator();
+                    const gainNode = audioCtx.createGain();
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioCtx.destination);
+                    oscillator.type = 'sine';
+                    oscillator.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5 note
+                    gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    oscillator.start();
+                    oscillator.stop(audioCtx.currentTime + 0.15);
+                } catch(e) {}
             }
         }
         initialLoadComplete = true;
-        
-        // (Your existing layout building block loop code to render cards to dashboard stays here)
+
+        // Render cards sorted chronically (newest orders displayed first)
+        Object.keys(data).reverse().forEach(key => {
+            const order = data[key];
+            const card = document.createElement('div');
+            card.className = `order-card status-${order.status || 'pending'}`;
+
+            // Map and safely handle cart items array/object formatting
+            let itemsHtml = "";
+            let finalBill = 0;
+            if (order.items) {
+                Object.keys(order.items).forEach(k => {
+                    const i = order.items[k];
+                    itemsHtml += `<div class="item-row"><strong>${i.qty}x</strong> ${i.name} ${i.spice ? `[${i.spice}]` : ''} — <span style="color: #777;">$${i.price * i.qty}</span></div>`;
+                    finalBill += (i.price * i.qty);
+                });
+            }
+
+            // Verify screenshot proof data block attachment
+            let proofHtml = "";
+            if (order.proofImage && order.proofImage.startsWith("data:image")) {
+                proofHtml = `<img class="proof-preview-thumbnail" src="${order.proofImage}" onclick="viewProofInLightbox('${order.proofImage}')" alt="Payment Proof">`;
+            } else {
+                proofHtml = `<p style="font-size:0.8rem; color:#999; font-style:italic; margin-bottom:15px;"><i class="fas fa-times-circle"></i> No payment screenshot uploaded</p>`;
+            }
+
+            card.innerHTML = `
+                <div>
+                    <div class="order-header">
+                        <span class="order-id">Order #${order.id || '----'}</span>
+                        <span class="order-time"><i class="far fa-clock"></i> ${order.time || '--:--'}</span>
+                    </div>
+                    <div class="customer-info">
+                        <strong><i class="fas fa-user"></i> Name:</strong> ${escapeHTML(order.name || 'Unknown')}<br>
+                        <strong><i class="fas fa-phone"></i> Phone:</strong> <a href="tel:${order.phone}" style="color:inherit;">${escapeHTML(order.phone || 'None')}</a>
+                    </div>
+                    <div class="items-list">
+                        ${itemsHtml || 'No item payload properties registered.'}
+                    </div>
+                    <strong><i class="fas fa-receipt"></i> E-Transfer Proof:</strong>
+                    ${proofHtml}
+                </div>
+                <div>
+                    <div class="total-row">
+                        <span>Total Income:</span>
+                        <span style="color: #28a745;">$${finalBill}</span>
+                    </div>
+                    <select class="status-select" onchange="modifyOrderStatus('${key}', this.value)">
+                        <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>⏳ Pending Review</option>
+                        <option value="preparing" ${order.status === 'preparing' ? 'selected' : ''}>🔥 Kitchen Cooking</option>
+                        <option value="ready" ${order.status === 'ready' ? 'selected' : ''}>🚀 Ready for Pickup</option>
+                        <option value="completed" ${order.status === 'completed' ? 'selected' : ''}>✅ Order Completed</option>
+                        <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>❌ Cancelled</option>
+                    </select>
+                </div>
+            `;
+            container.appendChild(card);
+        });
     });
+
+    function calculateTotal(items) {
+        let total = 0;
+        if (!items) return total;
+        Object.keys(items).forEach(k => { total += (items[k].price * items[k].qty); });
+        return total;
+    }
+
+    window.modifyOrderStatus = function(orderDbKey, newStatus) {
+        const orderRef = ref(db, `orders/${orderDbKey}`);
+        update(orderRef, { status: newStatus })
+        .then(() => {
+            console.log(`Order reference ${orderDbKey} modified to state: ${newStatus}`);
+        })
+        .catch(err => alert("Error modifying data state execution entry structural block: " + err));
+    };
+
+    window.viewProofInLightbox = function(base64Source) {
+        document.getElementById('lightbox-target').src = base64Source;
+        document.getElementById('img-lightbox').style.display = 'flex';
+    };
+
+    function escapeHTML(str) {
+        return str.replace(/[&<>'"]/g, t => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[t] || t));
+    }
 </script>
+</body>
+</html>
