@@ -3,130 +3,175 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nafis Foods | Admin Panel</title>
+    <title>Nafis Foods | Seller Dashboard</title>
     <link class="icon" type="image/jpeg" href="logo.jpg">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root { --gold: #D4AF37; --dark: #1a1a1a; --bg: #f5f7fb; --white: #ffffff; --red: #d9534f; --blue: #0275d8; --green: #5cb85c; }
-        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; background-color: var(--bg); color: #333; }
+        body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0; background-color: var(--bg); color: #333; display: flex; min-height: 100vh; }
         
         /* PIN Overlay */
         #pin-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--dark); z-index: 10000; display: flex; flex-direction: column; justify-content: center; align-items: center; color: var(--gold); }
         #pin-input { padding: 15px; font-size: 2rem; width: 160px; text-align: center; border-radius: 10px; border: none; margin-top: 20px; letter-spacing: 5px; outline: none; }
 
-        .top-nav { background: var(--dark); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; color: var(--gold); position: sticky; top: 0; z-index: 100; }
-        .dashboard-container { max-width: 600px; margin: 20px auto; padding: 0 15px; display: none; }
+        /* Left Side Panel Navigation */
+        .sidebar { width: 260px; background: var(--dark); color: white; display: none; flex-direction: column; box-shadow: 4px 0 10px rgba(0,0,0,0.1); position: fixed; top: 0; bottom: 0; left: 0; z-index: 999; }
+        .sidebar-brand { padding: 25px 20px; border-bottom: 1px solid #2d2d2d; color: var(--gold); }
+        .sidebar-brand h1 { margin: 0; font-size: 1.3rem; font-weight: 700; line-height: 1.2; }
+        .nav-links { list-style: none; padding: 0; margin: 20px 0; display: flex; flex-direction: column; gap: 5px; }
+        .nav-item { padding: 14px 20px; cursor: pointer; display: flex; align-items: center; gap: 12px; font-weight: 600; color: #b3b3b3; transition: 0.2s; font-size: 0.95rem; }
+        .nav-item:hover, .nav-item.active { background: #252525; color: var(--gold); }
+        .nav-item i { width: 20px; font-size: 1.1rem; }
+        .sidebar-footer { margin-top: auto; padding: 15px 20px; font-size: 0.75rem; border-top: 1px solid #2d2d2d; display: flex; align-items: center; gap: 8px; color: var(--gold); }
 
-        .earnings-banner { background: var(--dark); color: var(--gold); border-radius: 15px; padding: 20px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
-        .amount { font-size: 2rem; font-weight: bold; }
+        /* Main Workspace Content Area */
+        .main-workspace { flex: 1; padding: 25px; margin-left: 260px; display: none; box-sizing: border-box; }
+        .dashboard-view { display: none; max-width: 700px; margin: 0 auto; }
+        .dashboard-view.active-view { display: block; }
 
-        .status-section { background: var(--white); border-radius: 15px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-        .status-header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; border-top: 5px solid #ccc; }
-        .count-badge { background: #eee; padding: 2px 10px; border-radius: 12px; font-size: 0.85rem; }
+        /* Traditional Card & List Elements */
+        .earnings-banner { background: var(--dark); color: var(--gold); border-radius: 15px; padding: 20px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .earnings-banner h2 { margin: 0; font-size: 1rem; text-transform: uppercase; opacity: 0.8; }
+        .earnings-banner .amount { font-size: 2rem; font-weight: bold; }
+
+        .status-section { background: var(--white); border-radius: 15px; margin-bottom: 20px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .status-header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 1.05rem; border-top: 5px solid transparent; }
+        .count-badge { background: #fdf6e8; color: #b58d13; padding: 2px 10px; border-radius: 12px; font-size: 0.85rem; }
         
-        /* Form Styling */
-        .admin-form { padding: 15px; display: flex; flex-direction: column; gap: 10px; background: #fff; }
-        .admin-form input, .admin-form select { padding: 12px; border-radius: 8px; border: 1px solid #ddd; font-size: 1rem; }
+        .sec-pending .status-header { border-color: #ffc107; }
+        .sec-cooking .status-header { border-color: var(--blue); }
+        .sec-ready .status-header { border-color: var(--green); }
+        .sec-history .status-header { border-color: #6c757d; }
 
-        /* Order Cards */
-        .order-mini-card { border: 1px solid #eee; border-radius: 10px; padding: 15px; margin: 10px; background: #fff; }
-        .action-group { display: flex; gap: 8px; margin-top: 12px; }
-        .btn { flex: 1; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; color: white; display: flex; align-items: center; justify-content: center; gap: 5px; }
-        .btn-cancel { background: var(--red); }
-        .btn-accept { background: var(--blue); }
-        .btn-ready { background: var(--gold); color: #000; }
-        .btn-complete { background: var(--green); }
+        .order-mini-card { border: 1px solid #eee; border-radius: 10px; padding: 15px; margin: 15px; background: #fff; }
+        .cust-name { font-weight: bold; font-size: 1.1rem; margin-bottom: 5px; color: #222; }
+        .item-line { font-size: 0.9rem; padding: 4px 0; border-bottom: 1px dashed #f0f0f0; color: #444; }
 
-        /* Inventory Toggles */
-        .inv-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; border-bottom: 1px solid #eee; }
-        .toggle-switch { position: relative; width: 45px; height: 22px; }
+        /* Action Buttons */
+        .action-group { display: flex; gap: 10px; margin-top: 15px; }
+        .btn { flex: 1; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; color: white; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; font-size: 0.9rem; }
+        .btn-cancel { background-color: var(--red); }
+        .btn-accept { background-color: var(--blue); }
+        .btn-ready { background-color: var(--gold); color: var(--dark); }
+        .btn-complete { background-color: var(--green); }
+        .btn:active { transform: scale(0.96); }
+
+        .proof-btn { background: #f0f7ff; color: var(--blue); border: 1px solid #cce5ff; padding: 8px; border-radius: 6px; width: 100%; margin-top: 10px; font-weight: bold; cursor: pointer; }
+
+        /* Live Menu Management Form & Toggles */
+        .admin-form { padding: 20px; display: flex; flex-direction: column; gap: 12px; background: #fff; border-bottom: 1px solid #eee; }
+        .admin-form input, .admin-form select { padding: 12px; border-radius: 8px; border: 1px solid #ddd; font-size: 0.95rem; box-sizing: border-box; width: 100%; outline: none; }
+        .inv-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-bottom: 1px solid #f6f6f6; background: white; }
+        .toggle-switch { position: relative; display: inline-block; width: 46px; height: 24px; }
         .toggle-switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: #ccc; transition: .4s; border-radius: 20px; }
-        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background: white; transition: .4s; border-radius: 50%; }
-        input:checked + .slider { background: var(--green); }
-        input:checked + .slider:before { transform: translateX(23px); }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 24px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--green); }
+        input:checked + .slider:before { transform: translateX(22px); }
 
-        /* Reviews */
-        .review-card { background: white; border-radius: 12px; padding: 15px; margin-top: 10px; border-left: 5px solid var(--gold); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .reply-box { width: 100%; margin-top: 10px; padding: 10px; border-radius: 8px; border: 1px solid #ddd; box-sizing: border-box; }
+        /* Reviews Panel */
+        .review-card { background: white; border-radius: 12px; padding: 15px; margin-top: 15px; border-left: 5px solid var(--gold); box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .reply-area { width: 100%; margin-top: 10px; padding: 10px; border-radius: 8px; border: 1px solid #ddd; resize: none; box-sizing: border-box; font-family: inherit; }
+        .reply-btn { background: var(--dark); color: var(--gold); border: none; padding: 10px 18px; border-radius: 6px; margin-top: 6px; cursor: pointer; font-weight: bold; font-size: 0.85rem; }
 
         #lightbox { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 10001; justify-content: center; align-items: center; }
-        #lightbox img { max-width: 90%; max-height: 80%; border: 3px solid var(--gold); }
+        #lightbox img { max-width: 90%; max-height: 80%; border-radius: 10px; border: 2px solid var(--gold); }
+
+        @media (max-width: 768px) {
+            .sidebar { width: 60px; }
+            .sidebar-brand h1, .nav-item span, .sidebar-footer span { display: none; }
+            .nav-item { padding: 15px; justify-content: center; }
+            .main-workspace { margin-left: 60px; padding: 15px; }
+        }
     </style>
 </head>
 <body>
 
 <div id="pin-overlay">
-    <i class="fas fa-shield-alt" style="font-size: 3rem; margin-bottom: 10px;"></i>
-    <h2>Nafis Foods Admin</h2>
+    <i class="fas fa-user-shield" style="font-size: 3rem; margin-bottom: 10px;"></i>
+    <h2>Admin Gateway Lock</h2>
     <input type="password" id="pin-input" maxlength="4" placeholder="••••" autofocus>
-    <p style="font-size: 0.8rem; opacity: 0.6; margin-top: 15px;">Enter 4-digit PIN to unlock</p>
+    <p style="font-size: 0.8rem; opacity: 0.6; margin-top: 15px;">Enter security PIN key code configuration</p>
 </div>
 
-<div class="top-nav">
-    <div style="display:flex; align-items:center; gap:10px;">
-        <i class="fas fa-user-tie"></i>
-        <strong>Seller Panel</strong>
+<nav class="sidebar" id="admin-sidebar">
+    <div class="sidebar-brand">
+        <h1><i class="fas fa-utensils"></i> Nafis Foods</h1>
     </div>
-    <div id="status-dot"><i class="fas fa-circle" style="color: #28a745;"></i> Live</div>
-</div>
+    <ul class="nav-links">
+        <li class="nav-item active" onclick="switchView('live-orders', this)"><i class="fas fa-bell"></i> <span>Live Order Deck</span></li>
+        <li class="nav-item" onclick="switchView('manage-inventory', this)"><i class="fas fa-boxes"></i> <span>Manage Inventory</span></li>
+        <li class="nav-item" onclick="switchView('revenue-report', this)"><i class="fas fa-wallet"></i> <span>Total Revenue</span></li>
+        <li class="nav-item" onclick="switchView('reviews-panel', this)"><i class="fas fa-star"></i> <span>Customer Reviews</span></li>
+    </ul>
+    <div class="sidebar-footer">
+        <i class="fas fa-circle" style="color: #28a745;"></i> <span>Connected Live</span>
+    </div>
+</nav>
 
-<div class="dashboard-container" id="main-dash">
+<main class="main-workspace" id="dashboard-space">
     
-    <div class="earnings-banner">
-        <div>
-            <h3 style="margin:0; font-size: 0.9rem; text-transform:uppercase;">Total Revenue</h3>
-            <div class="amount">$<span id="total-earnings">0</span></div>
+    <div id="live-orders" class="dashboard-view active-view">
+        <div class="status-section sec-pending">
+            <div class="status-header">New Pending <span class="count-badge" id="count-pending">0</span></div>
+            <div id="list-pending"></div>
         </div>
-        <i class="fas fa-chart-line" style="font-size: 2rem; opacity: 0.3;"></i>
+        <div class="status-section sec-cooking">
+            <div class="status-header">Cooking / Kitchen <span class="count-badge" id="count-preparing">0</span></div>
+            <div id="list-preparing"></div>
+        </div>
+        <div class="status-section sec-ready">
+            <div class="status-header">Ready for Pickup <span class="count-badge" id="count-ready">0</span></div>
+            <div id="list-ready"></div>
+        </div>
     </div>
 
-    <div class="status-section">
-        <div class="status-header" style="border-color: var(--dark);">Manage Menu & Stock</div>
-        <div class="admin-form">
-            <input type="text" id="new-item-name" placeholder="Item Name (e.g. Seekh Kabab)">
-            <input type="number" id="new-item-price" placeholder="Price ($)">
-            <select id="new-item-cat">
-                <option value="Main Dish">Main Dish</option>
-                <option value="Snacks">Snacks</option>
-                <option value="Dessert">Dessert</option>
-            </select>
-            <button class="btn btn-accept" onclick="addItem()"><i class="fas fa-plus"></i> Add to Menu</button>
-        </div>
-        <div id="inventory-list" style="max-height: 300px; overflow-y: auto;">
+    <div id="manage-inventory" class="dashboard-view">
+        <div class="status-section" style="border-top: 5px solid var(--dark);">
+            <div class="status-header">Add New Menu Item Form</div>
+            <div class="admin-form">
+                <input type="text" id="new-item-name" placeholder="Dish Name (e.g., Spicy Lamb Chops)">
+                <input type="number" id="new-item-price" placeholder="Price Matrix Numerical Value ($)">
+                <select id="new-item-cat">
+                    <option value="rice">Rice Specialties</option>
+                    <option value="daal">Authentic Daal (Lentils)</option>
+                    <option value="snacks">Snacks & Fast Food</option>
+                    <option value="salan">Authentic Salan (Curry)</option>
+                    <option value="roti">Fresh Roti & Naan</option>
+                </select>
+                <button class="btn btn-accept" onclick="addItem()"><i class="fas fa-plus"></i> Inject Into Menu Stream</button>
             </div>
+            <div id="inventory-list" style="max-height: 450px; overflow-y: auto;"></div>
+        </div>
     </div>
 
-    <div class="status-section" style="border-color: #ffc107;">
-        <div class="status-header">New Pending <span class="count-badge" id="count-pending">0</span></div>
-        <div id="list-pending"></div>
+    <div id="revenue-report" class="dashboard-view">
+        <div class="earnings-banner">
+            <div>
+                <h2>Total Capital Earned</h2>
+                <div class="amount">$<span id="total-earnings">0</span></div>
+            </div>
+            <i class="fas fa-chart-line" style="font-size: 2.5rem; opacity: 0.3;"></i>
+        </div>
+        <div class="status-section sec-history">
+            <div class="status-header">Completed History Archive <span class="count-badge" id="count-completed">0</span></div>
+            <div id="list-completed"></div>
+        </div>
     </div>
 
-    <div class="status-section" style="border-color: var(--blue);">
-        <div class="status-header">In Kitchen <span class="count-badge" id="count-preparing">0</span></div>
-        <div id="list-preparing"></div>
+    <div id="reviews-panel" class="dashboard-view">
+        <h2 style="font-size: 1.2rem; margin-bottom: 15px;"><i class="fas fa-comments" style="color:var(--gold);"></i> Received Customer Statements Log</h2>
+        <div id="admin-reviews-list"></div>
     </div>
 
-    <div class="status-section" style="border-color: var(--green);">
-        <div class="status-header">Ready for Pickup <span class="count-badge" id="count-ready">0</span></div>
-        <div id="list-ready"></div>
-    </div>
-
-    <div class="status-section" style="border-color: #6c757d;">
-        <div class="status-header">Completed History <span class="count-badge" id="count-completed">0</span></div>
-        <div id="list-completed"></div>
-    </div>
-
-    <h3 style="margin-top: 30px;"><i class="fas fa-star" style="color:var(--gold);"></i> Customer Reviews</h3>
-    <div id="reviews-list"></div>
-
-</div>
+</main>
 
 <div id="lightbox" onclick="this.style.display='none'"><img id="lb-img" src=""></div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getDatabase, ref, onValue, update, set, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    import { getMessaging, getToken } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyC0Ugl8OiCZwWKr2PkgztZKALdEz-gmLSY",
@@ -140,54 +185,74 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
+    const messaging = getMessaging(app);
 
-    // PIN Logic
+    // Secure Verification Input Gatekeeper Listener
     document.getElementById('pin-input').addEventListener('input', (e) => {
         if(e.target.value === '1234') {
             document.getElementById('pin-overlay').style.display = 'none';
-            document.getElementById('main-dash').style.display = 'block';
+            document.getElementById('admin-sidebar').style.display = 'flex';
+            document.getElementById('dashboard-space').style.display = 'block';
+            setupNotifications();
         }
     });
 
-    // 1. Inventory Functions
+    // View Switching Logic Matrix
+    window.switchView = function(viewId, element) {
+        document.querySelectorAll('.dashboard-view').forEach(v => v.classList.remove('active-view'));
+        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+        document.getElementById(viewId).classList.add('active-view');
+        element.classList.add('active');
+    };
+
+    // Client/Server Push Subsystem Initializer
+    async function setupNotifications() {
+        if (Notification.permission === 'granted') {
+            const reg = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+            await getToken(messaging, { vapidKey: "BFx1PxB2B1nHzQ5Zpz8bBaIQj5qMs3HXZ_dIgnyDHqbQC-biOOfjhMSTru-DtPB8ENUDZornXJjyXASSL3HL4ok", serviceWorkerRegistration: reg });
+        }
+    }
+
+    // --- Dynamic Realtime Inventory Engine Core Hooks ---
     window.addItem = () => {
-        const name = document.getElementById('new-item-name').value;
-        const price = document.getElementById('new-item-price').value;
+        const name = document.getElementById('new-item-name').value.trim();
+        const price = document.getElementById('new-item-price').value.trim();
         const cat = document.getElementById('new-item-cat').value;
         if(name && price) {
-            set(ref(db, 'menu/' + name), { name, price: parseFloat(price), category: cat, available: true });
-            document.getElementById('new-item-name').value = "";
-            document.getElementById('new-item-price').value = "";
+            set(ref(db, 'menu/' + name), { name, price: parseFloat(price), category: cat, available: true }).then(() => {
+                document.getElementById('new-item-name').value = "";
+                document.getElementById('new-item-price').value = "";
+            });
         }
     };
 
     onValue(ref(db, 'menu'), (snap) => {
-        const list = document.getElementById('inventory-list');
-        list.innerHTML = "";
+        const container = document.getElementById('inventory-list');
+        container.innerHTML = "";
         const data = snap.val();
-        if(!data) return;
+        if(!data) { container.innerHTML = `<p style="padding:20px; color:#999; font-style:italic;">No dynamic menu entries configured inside cloud system.</p>`; return; }
         Object.keys(data).forEach(key => {
             const item = data[key];
             const div = document.createElement('div');
             div.className = 'inv-item';
             div.innerHTML = `
-                <span><strong>${item.name}</strong> ($${item.price})</span>
-                <div style="display:flex; gap:15px; align-items:center;">
+                <span><strong>${item.name}</strong> ($${item.price}) — <small style="color:#777; text-transform:uppercase;">${item.category}</small></span>
+                <div style="display:flex; gap:18px; align-items:center;">
                     <label class="toggle-switch">
-                        <input type="checkbox" ${item.available ? 'checked' : ''} onchange="updateItem('${key}', this.checked)">
+                        <input type="checkbox" ${item.available ? 'checked' : ''} onchange="updateItemStatus('${key}', this.checked)">
                         <span class="slider"></span>
                     </label>
                     <i class="fas fa-trash-alt" style="color:var(--red); cursor:pointer;" onclick="deleteItem('${key}')"></i>
                 </div>
             `;
-            list.appendChild(div);
+            container.appendChild(div);
         });
     });
 
-    window.updateItem = (key, status) => update(ref(db, 'menu/' + key), { available: status });
-    window.deleteItem = (key) => confirm("Delete this item?") && remove(ref(db, 'menu/' + key));
+    window.updateItemStatus = (key, status) => update(ref(db, 'menu/' + key), { available: status });
+    window.deleteItem = (key) => confirm("Remove item completely from data sync line?") && remove(ref(db, 'menu/' + key));
 
-    // 2. Orders Handling
+    // --- Order Pipeline Engine ---
     onValue(ref(db, 'orders'), (snap) => {
         const data = snap.val();
         const lists = { pending: [], preparing: [], ready: [], completed: [] };
@@ -208,65 +273,74 @@
     function renderOrders(status, orders) {
         const container = document.getElementById(`list-${status}`);
         document.getElementById(`count-${status}`).innerText = orders.length;
-        container.innerHTML = "";
+        container.innerHTML = orders.length ? "" : `<p style="color:#aaa; font-size:0.85rem; text-align:center; padding:15px;">No active orders matching index parameter.</p>`;
 
         orders.reverse().forEach(o => {
             const card = document.createElement('div');
             card.className = 'order-mini-card';
-            let items = "";
-            if (o.items) Object.values(o.items).forEach(i => items += `<div>• ${i.qty}x ${i.name}</div>`);
+            let itemsHtml = "";
+            if (o.items) Object.values(o.items).forEach(i => itemsHtml += `<div class="item-line"><strong>${i.qty}x</strong> ${i.name} ${i.spice ? `[${i.spice}]` : ''}</div>`);
 
-            let buttons = "";
+            let actionButtons = "";
             if (status === 'pending') {
-                buttons = `<div class="action-group">
-                    <button class="btn btn-cancel" onclick="setStatus('${o.dbKey}','cancelled')">Reject</button>
-                    <button class="btn btn-accept" onclick="setStatus('${o.dbKey}','preparing')">Accept</button>
-                </div>`;
+                actionButtons = `
+                    <div class="action-group">
+                        <button class="btn btn-cancel" onclick="updateStatus('${o.dbKey}','cancelled')"><i class="fas fa-times"></i> Cancel</button>
+                        <button class="btn btn-accept" onclick="updateStatus('${o.dbKey}','preparing')"><i class="fas fa-check"></i> Accept</button>
+                    </div>`;
             } else if (status === 'preparing') {
-                buttons = `<button class="btn btn-ready" style="width:100%; margin-top:10px;" onclick="setStatus('${o.dbKey}','ready')">Ready</button>`;
+                actionButtons = `
+                    <div class="action-group">
+                        <button class="btn btn-ready" onclick="updateStatus('${o.dbKey}','ready')"><i class="fas fa-utensils"></i> Ready for Pickup</button>
+                    </div>`;
             } else if (status === 'ready') {
-                buttons = `<button class="btn btn-complete" style="width:100%; margin-top:10px;" onclick="setStatus('${o.dbKey}','completed')">Done</button>`;
+                actionButtons = `
+                    <div class="action-group">
+                        <button class="btn btn-complete" onclick="updateStatus('${o.dbKey}','completed')"><i class="fas fa-flag-checkered"></i> Finish</button>
+                    </div>`;
             }
 
             card.innerHTML = `
-                <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:#888;"><span>#${o.id}</span><span>${o.time}</span></div>
-                <div style="font-weight:bold; font-size:1.1rem; margin:5px 0;">${o.name}</div>
+                <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:#888;"><span>#${o.id}</span><span>${o.time}</span></div>
+                <div class="cust-name">${o.name}</div>
                 <div style="font-size:0.85rem; margin-bottom:8px;"><i class="fas fa-phone"></i> ${o.phone}</div>
-                <div style="background:#f9f9f9; padding:8px; border-radius:6px; font-size:0.9rem;">${items}</div>
-                ${o.proofImage ? `<button class="btn" style="background:#eee; color:#333; margin-top:10px; font-size:0.8rem;" onclick="viewImg('${o.proofImage}')">View Receipt</button>` : ''}
-                ${buttons}
+                <div style="margin:10px 0;">${itemsHtml}</div>
+                ${o.proofImage ? `<button class="proof-btn" onclick="openProof('${o.proofImage}')">View Payment Receipt Screenshot</button>` : ''}
+                ${actionButtons}
             `;
             container.appendChild(card);
         });
     }
 
-    window.setStatus = (key, s) => update(ref(db, `orders/${key}`), { status: s });
-    window.viewImg = (src) => { document.getElementById('lb-img').src = src; document.getElementById('lightbox').style.display = 'flex'; };
-
-    // 3. Reviews
+    // --- Customer Review Tracking Interface Module ---
     onValue(ref(db, 'reviews'), (snap) => {
-        const list = document.getElementById('reviews-list');
-        list.innerHTML = "";
+        const container = document.getElementById('admin-reviews-list');
+        container.innerHTML = "";
         const data = snap.val();
-        if(!data) return;
+        if (!data) { container.innerHTML = `<p style="color:#aaa; font-style:italic;">No user reviews posted to timeline.</p>`; return; }
         Object.keys(data).reverse().forEach(key => {
             const r = data[key];
             const div = document.createElement('div');
             div.className = 'review-card';
             div.innerHTML = `
-                <div style="display:flex; justify-content:space-between;"><strong>${r.name}</strong><span>${r.stars}★</span></div>
-                <p style="font-size:0.9rem; margin:5px 0;">"${r.comment}"</p>
-                ${r.adminReply ? `<div style="background:#f0f0f0; padding:5px; font-size:0.8rem; border-radius:4px;"><strong>Reply:</strong> ${r.adminReply}</div>` : ''}
-                <textarea class="reply-box" id="rep-${key}" placeholder="Type reply..."></textarea>
-                <button class="btn btn-accept" style="width:auto; padding:5px 15px; margin-top:5px; font-size:0.8rem;" onclick="saveReply('${key}')">Post Reply</button>
+                <div style="display:flex; justify-content:space-between; font-weight:bold;"><strong>${r.name}</strong><span>${r.stars} ★</span></div>
+                <p style="font-size:0.9rem; margin:6px 0; color:#555;">"${r.comment}"</p>
+                ${r.adminReply ? `<div style="background:#f4f4f4; border-left:3px solid var(--dark); padding:6px; font-size:0.8rem; margin:5px 0; border-radius:4px;"><strong>Your Response:</strong> ${r.adminReply}</div>` : ''}
+                <textarea class="reply-area" id="rep-${key}" placeholder="Compose systemic response translation context box text..."></textarea>
+                <button class="reply-btn" onclick="sendReply('${key}')">Post Response</button>
             `;
-            list.appendChild(div);
+            container.appendChild(div);
         });
     });
 
-    window.saveReply = (key) => {
-        const val = document.getElementById(`rep-${key}`).value;
-        if(val) update(ref(db, `reviews/${key}`), { adminReply: val }).then(() => alert("Reply posted!"));
+    window.updateStatus = (key, s) => update(ref(db, `orders/${key}`), { status: s });
+    window.openProof = (src) => { document.getElementById('lb-img').src = src; document.getElementById('lightbox').style.display = 'flex'; };
+    window.sendReply = (key) => {
+        const t = document.getElementById(`rep-${key}`).value.trim();
+        if(t) update(ref(db, `reviews/${key}`), { adminReply: t }).then(() => {
+            alert("Response verified and loaded directly onto the public wall timeline!");
+            document.getElementById(`rep-${key}`).value = "";
+        });
     };
 </script>
 </body>
